@@ -1,26 +1,35 @@
 package com.adi.kvstore.impl;
 
 import com.adi.kvstore.api.KeyValueStore;
+import com.adi.kvstore.concurrency.BackgroundScheduler;
+import com.adi.kvstore.concurrency.CleanerTask;
 import com.adi.kvstore.concurrency.ConcurrentStorageEngine;
 import com.adi.kvstore.core.Entry;
 import com.adi.kvstore.expiration.ExpirationPolicy;
 import com.adi.kvstore.time.Clock;
 
 /*
-* Thread-safe key-value store implementation
-* Supports concurrent access with correct TTL semantics.
+* Thread-safe key-value store implementation with background expiration cleanup.
 */
 
 public class ConcurrentKVStore implements KeyValueStore{
 
+    private static final long CLEANUP_INTERVAL_MILLIS = 5000; // 5 seconds (v2 default)
+
     private final ConcurrentStorageEngine storageEngine;
     private final ExpirationPolicy expirationPolicy;
     private final Clock clock;
+    private final BackgroundScheduler scheduler;
 
     public ConcurrentKVStore(ConcurrentStorageEngine storageEngine, ExpirationPolicy expirationPolicy, Clock clock){
         this.storageEngine = storageEngine;
         this.expirationPolicy = expirationPolicy;
         this.clock = clock;
+
+        // Setup background expiration cleanup
+        CleanerTask cleanerTask = new CleanerTask(storageEngine, expirationPolicy, clock);
+        this.scheduler = new BackgroundScheduler(CLEANUP_INTERVAL_MILLIS);
+        this.scheduler.start(cleanerTask);
     }
 
     @Override
@@ -59,5 +68,13 @@ public class ConcurrentKVStore implements KeyValueStore{
         }
 
         return entry.getValue();
+    }
+
+    /*
+    * Gracefully stop background cleanup.
+    * Should be called during application shutdown.
+    */
+    public void shutdown(){
+        scheduler.stop();
     }
 }
