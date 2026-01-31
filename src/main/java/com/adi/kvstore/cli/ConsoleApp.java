@@ -1,9 +1,9 @@
 package com.adi.kvstore.cli;
 
 import com.adi.kvstore.api.KeyValueStore;
-import com.adi.kvstore.core.InMemoryStorageEngine;
+import com.adi.kvstore.concurrency.ConcurrentStorageEngine;
 import com.adi.kvstore.expiration.DefaultExpirationPolicy;
-import com.adi.kvstore.impl.SimpleKVStore;
+import com.adi.kvstore.impl.ConcurrentKVStore;
 import com.adi.kvstore.time.SystemClock;
 
 import java.util.Scanner;
@@ -11,8 +11,9 @@ import java.util.Scanner;
 public class ConsoleApp {
 
     public static void main(String[] args) {
-        KeyValueStore store = new SimpleKVStore(new InMemoryStorageEngine(), new DefaultExpirationPolicy(), new SystemClock());
-    
+        
+        ConcurrentKVStore store = new ConcurrentKVStore(new ConcurrentStorageEngine(), new DefaultExpirationPolicy(), new SystemClock());
+
         Scanner scanner = new Scanner(System.in);
         System.out.println("In-Memory Key-Value Store started.");
         System.out.println("Available commands: PUT, GET, EXIT");
@@ -39,7 +40,8 @@ public class ConsoleApp {
                         break;
                     
                     case "EXIT":
-                        System.out.println("Exiting...");
+                        System.out.println("Shutting down...");
+                        store.shutdown(); // clean shutdown
                         return;
 
                     default:
