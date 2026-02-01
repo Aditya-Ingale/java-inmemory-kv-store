@@ -2,17 +2,33 @@ package com.adi.kvstore.cli;
 
 import com.adi.kvstore.api.KeyValueStore;
 import com.adi.kvstore.concurrency.ConcurrentStorageEngine;
+import com.adi.kvstore.core.InMemoryStorageEngine;
+import com.adi.kvstore.eviction.LRUEvictionPolicy;
+import com.adi.kvstore.eviction.SimpleMemoryTracker;
 import com.adi.kvstore.expiration.DefaultExpirationPolicy;
 import com.adi.kvstore.impl.ConcurrentKVStore;
+import com.adi.kvstore.impl.EvictingKVStore;
+import com.adi.kvstore.impl.SimpleKVStore;
 import com.adi.kvstore.time.SystemClock;
 
 import java.util.Scanner;
 
+/**
+ * Console-based interface for the key-value store.
+ */
+
 public class ConsoleApp {
 
     public static void main(String[] args) {
+
+        // v1: 
+        // KeyValueStore store = new SimpleKVStore(new InMemoryStorageEngine(), new DefaultExpirationPolicy(), new SystemClock());
+
+        // v2: 
+        // ConcurrentKVStore store = new ConcurrentKVStore(new ConcurrentStorageEngine(), new DefaultExpirationPolicy(), new SystemClock());
         
-        ConcurrentKVStore store = new ConcurrentKVStore(new ConcurrentStorageEngine(), new DefaultExpirationPolicy(), new SystemClock());
+        // v3: Evicitng Key-Value Store with LRU
+        KeyValueStore store = new EvictingKVStore(new ConcurrentStorageEngine(), new DefaultExpirationPolicy(), new LRUEvictionPolicy(), new SimpleMemoryTracker(3), new SystemClock());
 
         Scanner scanner = new Scanner(System.in);
         System.out.println("In-Memory Key-Value Store started.");
@@ -40,8 +56,7 @@ public class ConsoleApp {
                         break;
                     
                     case "EXIT":
-                        System.out.println("Shutting down...");
-                        store.shutdown(); // clean shutdown
+                        System.out.println("Exiting...");
                         return;
 
                     default:
