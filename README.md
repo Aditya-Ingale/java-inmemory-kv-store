@@ -11,7 +11,7 @@ This project is **not a Redis clone**. The goal is to understand how fast, in-me
 ---
 
 
-## 🎯 Why This Project Exists
+## Why This Project Exists
 
 
 This project was created to:
@@ -25,7 +25,7 @@ This project was created to:
 ---
 
 
-## 🧱 Versioned Evolution
+## Versioned Evolution
 
 
 The system is intentionally built in **three explicit versions**.
@@ -44,7 +44,7 @@ Each version **preserves the previous one**. Nothing is rewritten.
 ---
 
 
-## ✨ Features by Version
+## Features by Version
 
 
 ### v1 – Core Store
@@ -94,12 +94,8 @@ javac -d out src/main/java/com/adi/kvstore/**/*.java
 java -cp out com.adi.kvstore.cli.ConsoleApp
 ```
 
----
-> ⚠️ Maven is intentionally not required. This keeps the project focused on **design and logic**, not tooling.
----
 
-
-## ⌨️ Supported Console Commands
+## Supported Console Commands
 
 
 ```
@@ -127,7 +123,7 @@ world
 ---
 
 
-## 🔄 Running Different Versions (Important)
+## Running Different Versions (Important)
 
 
 The `ConsoleApp` is wired to **v3 by default**.
@@ -156,7 +152,7 @@ This allows reviewers or learners to:
 ---
 
 
-## 📦 Project Structure (High-Level)
+## Project Structure (High-Level)
 
 
 ```
@@ -172,7 +168,7 @@ com.adi.kvstore
 ```
 
 ---
-## 📐 Architecture & Design
+## Architecture & Design
 
 
 This project follows a **layered and evolvable architecture**:
@@ -182,16 +178,16 @@ This project follows a **layered and evolvable architecture**:
 - Concurrency is added by composition
 
 
-➡️ **For full system design, invariants, trade-offs, and version-by-version evolution, see:**
+ **For full system design, invariants, trade-offs, and version-by-version evolution, see:**
 
 
-📄 `ARCHITECTURE.md`
+ `ARCHITECTURE.md`
 
 
 ---
 
 
-## 🚀 Roadmap
+## Roadmap
 
 
 - v3 (completed): LRU eviction & memory limits
@@ -204,12 +200,12 @@ This project follows a **layered and evolvable architecture**:
 ---
 
 
-## 📝 Notes
+## Notes
 
 
 - v1 and v2 implementations are intentionally preserved
 - v3 is the default runtime store
-- This project is designed for **learning and interviews**, not production deployment
+- This project is designed for **learning**, not production deployment
 
 
 ---
