@@ -1,40 +1,110 @@
-# Java In-Memory Key–Value Store (v1)
+# Java In-Memory Key–Value Store
+
 
 A Redis-inspired **in-memory key–value store** built in Java as a **system-level learning project**.
 
-This project is **not** a Redis reimplementation. The goal is to understand how fast in-memory systems work internally instead of treating them as a black box.
+
+This project is **not a Redis clone**. The goal is to understand how fast, in-memory systems are designed internally instead of using them as black boxes.
+
 
 > **Motto:** Clarity. Correctness. Clear Abstraction.
 
----
-
-## 1. Project Goals
-
-* Understand internal design of in-memory data stores
-* Learn how TTL (Time-To-Live) expiration works
-* Practice clean abstractions and layered architecture
-* Build confidence in system-level Java design
-* Avoid feature explosion by evolving the system version by version
 
 ---
 
-## 2. Versioning Strategy
 
-The project is developed incrementally in **three explicit versions**:
+## 🎯 Why This Project Exists
 
-| Version | Focus                                               |
-| ------- | --------------------------------------------------- |
-| v1      | Core store, TTL correctness, clean abstractions     |
-| v2      | Concurrency, thread safety, background cleanup      |
-| v3      | LRU eviction, memory limits, performance trade-offs |
 
-This README documents **v1 only**.
+This project was created to:
+- Understand how in-memory systems manage data
+- Learn TTL (Time-To-Live) and expiration semantics deeply
+- Reason about concurrency and race conditions
+- Design eviction strategies (LRU) with real trade-offs
+- Practice evolving a system **version by version without rewrites**
+
 
 ---
 
-## 3. v1 Scope
 
-### Supported Commands
+## 🧱 Versioned Evolution
+
+
+The system is intentionally built in **three explicit versions**.
+
+
+| Version | Focus |
+|------|------|
+| v1 | Core correctness, TTL, single-threaded |
+| v2 | Concurrency, thread safety, background cleanup |
+| v3 | Memory limits, LRU eviction |
+
+
+Each version **preserves the previous one**. Nothing is rewritten.
+
+
+---
+
+
+## ✨ Features by Version
+
+
+### v1 – Core Store
+- In-memory key–value storage
+- `PUT` / `GET` commands
+- TTL (Time-To-Live) support
+- Lazy expiration
+- Single-threaded correctness
+
+
+### v2 – Concurrent Store
+- Thread-safe `GET` / `PUT`
+- `ConcurrentHashMap`-based storage
+- Background expiration cleanup
+- Safe concurrent expiration (compare-and-remove)
+
+
+### v3 – Evicting Store (Default)
+- Fixed memory limit (entry-count based)
+- LRU (Least Recently Used) eviction
+- Eviction + expiration interaction
+- All v1 and v2 guarantees preserved
+
+
+---
+
+
+## ▶️ How to Run the Project
+
+
+### 1️⃣ Clone the Repository
+
+
+```bash
+git clone <your-repo-url>
+cd java-inmemory-kv-store
+```
+
+
+### 2️⃣ Compile & Run
+
+
+From the project root:
+
+
+```bash
+javac -d out src/main/java/com/adi/kvstore/**/*.java
+java -cp out com.adi.kvstore.cli.ConsoleApp
+---
+
+> ⚠️ Maven is intentionally not required. This keeps the project focused on **design and logic**, not tooling.
+
+
+---
+
+
+## ⌨️ Supported Console Commands
+
 
 ```
 PUT key value
@@ -43,210 +113,68 @@ GET key
 EXIT
 ```
 
-### Features
 
-* Fully in-memory storage
-* Lazy TTL expiration
-* Single-threaded execution
-* Console-based interaction
+### Example Session
 
-### Explicit Non-Goals (v1)
-
-* No eviction policy
-* No concurrency
-* No persistence
-* No networking
-* No advanced Redis data types
-
----
-
-## 4. High-Level Architecture (v1)
-
-```
-CLI → KeyValueStore → StorageEngine
-              ↓
-        ExpirationPolicy
-              ↓
-            Clock
-```
-
-### Key Design Principle
-
-> **Data, policy, and time are deliberately separated.**
-
-This keeps the system testable, extensible, and easy to reason about.
-
----
-
-## 5. Package Structure (v1)
-
-```
-com.adi.kvstore
-├── api          # Public store interface
-├── cli          # Console interface
-├── core         # Core data and storage
-├── expiration   # TTL expiration logic
-├── impl         # Store implementation
-└── time         # Time abstraction
-```
-
----
-
-## 6. Core Components
-
-### 6.1 Clock
-
-**Package:** `time`
-
-Abstracts system time to avoid hard dependency on `System.currentTimeMillis()`.
-
-```java
-long now();
-```
-
-This design makes TTL logic deterministic and testable.
-
----
-
-### 6.2 Entry
-
-**Package:** `core`
-
-Represents a single immutable key-value record.
-
-Fields:
-
-* `key`
-* `value`
-* `expiryTime` (epoch millis, `-1` means no expiration)
-
-The `Entry` class contains **no TTL logic**.
-
----
-
-### 6.3 ExpirationPolicy
-
-**Package:** `expiration`
-
-Responsible only for answering:
-
-> *Is this entry expired at the given time?*
-
-The default policy uses absolute expiry time and lazy expiration.
-
----
-
-### 6.4 StorageEngine
-
-**Package:** `core`
-
-A policy-free abstraction over storage.
-
-Responsibilities:
-
-* Store entries
-* Retrieve entries
-* Remove entries
-
-The storage layer does **not**:
-
-* Check expiration
-* Track time
-* Apply eviction
-
----
-
-### 6.5 KeyValueStore
-
-**Package:** `api`
-
-Public-facing behavior contract.
-
-Responsibilities:
-
-* Convert TTL to absolute expiry
-* Enforce correct GET behavior
-* Perform lazy expiration cleanup
-
-Expired entries are **never visible** to clients.
-
----
-
-### 6.6 ConsoleApp
-
-**Package:** `cli`
-
-Thin CLI layer responsible for:
-
-* Parsing user input
-* Calling `KeyValueStore`
-* Printing output
-
-Contains **zero business logic**.
-
----
-
-## 7. TTL Behavior (v1)
-
-| Scenario | Result                 |
-| -------- | ---------------------- |
-| No TTL   | Entry never expires    |
-| TTL > 0  | Expires at `now + TTL` |
-| TTL = 0  | Expires immediately    |
-| TTL < 0  | Treated as expired     |
-
-Expiration is handled lazily during `GET` operations.
-
----
-
-## 8. Example Session
 
 ```
 PUT a hello
 GET a
 hello
 
+
 PUT b world 1000
 GET b
 world
-
-(wait 1s)
-GET b
-(nil)
 ```
 
----
-
-## 9. Design Invariants (v1)
-
-* Expired data is never returned
-* Storage does not enforce policy
-* Time is injectable, not global
-* Each class has a single responsibility
-* Correctness is prioritized over performance
 
 ---
 
-## 10. What Comes Next (v2 Preview)
 
-v2 will introduce:
+## 🔄 Running Different Versions (Important)
 
-* Thread-safe access
-* Background expiration cleanup
-* Locking strategies
-* Safe concurrent reads and writes
 
-All v1 abstractions are designed to support this evolution **without breaking changes**.
+The `ConsoleApp` is wired to **v3 by default**.
+
+
+Inside `ConsoleApp.java`, you will find clearly commented sections for:
+- v1 (`SimpleKVStore`)
+- v2 (`ConcurrentKVStore`)
+- v3 (`EvictingKVStore`)
+
+
+To run a specific version:
+1. Uncomment **only one** store initialization
+2. Comment out the others
+
+
+> ⚠️ **Only one version should be active at a time.**
+
+
+This allows reviewers or learners to:
+- Compare behaviors
+- Understand evolution
+- Run versions independently
+
 
 ---
 
-## 11. Author Notes
 
-This project is intentionally built **slowly and explicitly** to strengthen system design fundamentals.
+## 📦 Project Structure (High-Level)
 
-Every abstraction exists for a reason.
-Every feature is added only when justified.
+
+```
+com.adi.kvstore
+├── api # Public interfaces
+├── cli # Console application
+├── core # Core data & storage
+├── expiration # TTL logic
+├── concurrency # Thread safety & background cleanup
+├── eviction # LRU eviction & memory limits
+├── impl # Store implementations (v1, v2, v3)
+└── time # Time abstraction
+```
+
 
 ---
-
-**End of v1 Documentation**
