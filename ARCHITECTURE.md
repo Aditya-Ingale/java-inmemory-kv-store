@@ -264,4 +264,159 @@ This architecture mirrors how real in-memory systems are designed.
 
 ---
 
+## 5. v3 Architecture – Eviction & Memory Limits
+
+v3 introduces **bounded memory** through eviction while preserving all v1 and v2 guarantees.
+
+The central problem addressed in v3 is:
+
+> *How do we enforce memory limits in an in-memory system without breaking correctness, TTL semantics, or concurrency safety?*
+
+---
+
+### 5.1 v3 Design Goals
+
+v3 is designed with the following explicit goals:
+
+- Enforce a **fixed memory limit**
+- Evict entries using **Least Recently Used (LRU)** strategy
+- Preserve all TTL and concurrency invariants from v1 and v2
+- Avoid rewriting or mutating existing components
+- Prefer correctness and clarity over perfect eviction accuracy
+
+---
+
+### 5.2 v3 Flow
+
+```text
+CLI → EvictingKVStore
+        ├── ConcurrentStorageEngine
+        ├── ExpirationPolicy
+        ├── EvictionPolicy (LRU)
+        ├── MemoryTracker
+        └── Clock
+```
+
+Eviction is added as a **composition layer**, not a modification.
+
+---
+
+### 5.3 EvictingKVStore (Composition Layer)
+
+Responsibilities:
+- Orchestrates storage, expiration, eviction, and memory tracking
+- Triggers eviction synchronously on `PUT`
+- Ensures expiration always has priority
+
+Non-responsibilities:
+- Does not implement eviction logic
+- Does not track LRU ordering directly
+- Does not manage background threads
+
+---
+
+### 5.4 Eviction Policy Abstraction
+
+Eviction logic is isolated behind an `EvictionPolicy` interface.
+
+Key rule:
+
+> Policy decides *what* to evict; the store decides *when* to evict.
+
+This enables easy replacement (LRU → LFU → FIFO).
+
+---
+
+### 5.5 LRU Eviction Strategy
+
+Characteristics:
+- Tracks access order using a concurrent data structure
+- Updates recency on every successful `GET` and `PUT`
+- Selects eviction candidates from least-recently-used end
+
+Intentional trade-offs:
+- Ordering is approximate under concurrency
+- Duplicate metadata entries may exist
+- Storage remains the source of truth
+
+This mirrors real-world systems like Redis.
+
+---
+
+### 5.6 Memory Tracking
+
+Memory is defined as:
+
+> **Number of entries**, not bytes
+
+Rationale:
+- JVM object sizes are difficult to measure accurately
+- Entry-count tracking keeps reasoning simple
+- Limits are enforced *eventually*, not instantaneously
+
+---
+
+### 5.7 Eviction vs Expiration
+
+Priority rules:
+
+1. **Expiration always wins**
+2. Expired entries are removed lazily or via cleanup
+3. Eviction removes only valid entries under pressure
+
+This prevents eviction of valid data while expired data exists.
+
+---
+
+### 5.8 Concurrency Safety in v3
+
+All removals use **conditional removal**:
+
+```
+remove(key, expectedEntry)
+```
+
+
+This guarantees:
+- Newer entries are never deleted by stale threads
+- Eviction and expiration races are safe
+- Metadata corruption does not break correctness
+
+---
+
+### 5.9 v3 Invariants
+
+- Expired entries are never returned
+- Memory usage is bounded
+- Eviction never deletes newer entries accidentally
+- LRU metadata corruption does not affect correctness
+- All v2 concurrency guarantees are preserved
+
+---
+
+### 5.10 v3 Trade-offs
+
+Accepted:
+- Approximate LRU ordering
+- Temporary memory overshoot
+- Metadata redundancy
+
+Rejected:
+- Global locks
+- Perfect eviction ordering
+- Byte-accurate memory tracking
+
+---
+
+## 6. Key Takeaways
+
+- Correctness precedes optimization
+- Time, data, policy, and eviction are cleanly separated
+- Systems evolve safely through composition
+- Approximation is acceptable when correctness is preserved
+
+This architecture reflects how real-world in-memory systems are designed.
+
+---
+
 **End of Architecture Document**
