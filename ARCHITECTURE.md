@@ -253,17 +253,6 @@ No v2 code will be rewritten.
 
 ---
 
-## 6. Key Takeaways
-
-* Correctness is established before optimization
-* Time, data, and policy are strictly separated
-* Concurrency is introduced via composition
-* The system evolves without breaking abstractions
-
-This architecture mirrors how real in-memory systems are designed.
-
----
-
 ## 5. v3 Architecture – Eviction & Memory Limits
 
 v3 introduces **bounded memory** through eviction while preserving all v1 and v2 guarantees.
