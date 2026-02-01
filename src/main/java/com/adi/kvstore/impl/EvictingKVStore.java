@@ -35,7 +35,7 @@ public class EvictingKVStore implements KeyValueStore {
 
     @Override
     public void put(String key, String value){
-        put(key, value, -1);
+        putInternal(key, value, -1);
     }
 
     @Override
@@ -44,7 +44,7 @@ public class EvictingKVStore implements KeyValueStore {
                 ? clock.now()
                 : clock.now() + ttlMillis;
 
-        put(key, value, expiryTime);
+        putInternal(key, value, expiryTime);
     }
 
     private void putInternal(String key, String value, long expiryTime) {
