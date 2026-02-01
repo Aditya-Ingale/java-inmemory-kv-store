@@ -7,8 +7,6 @@ A Redis-inspired **in-memory key–value store** built in Java as a **system-lev
 This project is **not a Redis clone**. The goal is to understand how fast, in-memory systems are designed internally instead of using them as black boxes.
 
 
-> **Motto:** Clarity. Correctness. Clear Abstraction.
-
 
 ---
 
@@ -74,20 +72,19 @@ Each version **preserves the previous one**. Nothing is rewritten.
 ---
 
 
-## ▶️ How to Run the Project
+## How to Run the Project
 
 
-### 1️⃣ Clone the Repository
+### 1 Clone the Repository
 
 
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/Aditya-Ingale/java-inmemory-kv-store.git
 cd java-inmemory-kv-store
 ```
 
 
-### 2️⃣ Compile & Run
-
+### 2 Compile & Run
 
 From the project root:
 
@@ -95,11 +92,10 @@ From the project root:
 ```bash
 javac -d out src/main/java/com/adi/kvstore/**/*.java
 java -cp out com.adi.kvstore.cli.ConsoleApp
+```
+
 ---
-
 > ⚠️ Maven is intentionally not required. This keeps the project focused on **design and logic**, not tooling.
-
-
 ---
 
 
@@ -127,7 +123,6 @@ PUT b world 1000
 GET b
 world
 ```
-
 
 ---
 
@@ -176,5 +171,48 @@ com.adi.kvstore
 └── time # Time abstraction
 ```
 
+---
+## 📐 Architecture & Design
+
+
+This project follows a **layered and evolvable architecture**:
+- Storage is policy-free
+- Time is injected, not global
+- Expiration and eviction are separate concerns
+- Concurrency is added by composition
+
+
+➡️ **For full system design, invariants, trade-offs, and version-by-version evolution, see:**
+
+
+📄 `ARCHITECTURE.md`
+
 
 ---
+
+
+## 🚀 Roadmap
+
+
+- v3 (completed): LRU eviction & memory limits
+- Possible future extensions:
+- LFU eviction
+- Metrics & observability
+- Networked API
+
+
+---
+
+
+## 📝 Notes
+
+
+- v1 and v2 implementations are intentionally preserved
+- v3 is the default runtime store
+- This project is designed for **learning and interviews**, not production deployment
+
+
+---
+
+
+**End of README**
